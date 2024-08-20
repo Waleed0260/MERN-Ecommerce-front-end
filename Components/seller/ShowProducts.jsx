@@ -17,9 +17,14 @@ import {
     DialogTitle,
     DialogTrigger,
   } from "../ui/dialog"
-  import { Button } from '../ui/button'
+import { Button } from '../ui/button'
 import AddProducts from './AddProducts'
-const ShowProducts = () => {
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '../../lib/auth'
+
+const ShowProducts = async() => {
+  const session = await getServerSession(authOptions)
+  const id = session?.user?.id;
     const invoices = [
         {
           invoice: "INV001",
@@ -72,11 +77,11 @@ const ShowProducts = () => {
             <p>Products</p>
             <Dialog>
   <DialogTrigger><button>Add Products</button></DialogTrigger>
-  <DialogContent>
+  <DialogContent className="h-[600px] overflow-x-scroll">
     <DialogHeader>
       <DialogTitle>    <Button variant="ghost">Add Products</Button></DialogTitle>
       <DialogDescription>
-        <AddProducts/>
+        <AddProducts id={id}/>
       </DialogDescription>
     </DialogHeader>
   </DialogContent>

@@ -3,9 +3,7 @@ import React from 'react'
 import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import axios from "axios"
 const AddProducts = (id) => {
-    console.log("id", id.id)
     const validationSchema = Yup.object().shape({
         name: Yup.string()
           .required('Name is required')
@@ -26,36 +24,75 @@ const AddProducts = (id) => {
           .typeError('Stock must be a number')
           .integer('Stock must be an integer')
           .min(0, 'Stock must be 0 or more'),
+          image: Yup.mixed().required("image required")
       });
 
-      const { register, handleSubmit, formState: { errors } } = useForm({
+      const { register, handleSubmit, setValue, formState: { errors } } = useForm({
           resolver: yupResolver(validationSchema),
         });
       
-        const onSubmit = async(data) => {
-        //   console.log('Form data:', data)
-        const sellerId = id.id;
-          const payload = { sellerId, ...data };
+        // const onSubmit = async(data) => {
+        // //   console.log('Form data:', data)
+        // const seller_id = id.id;
+        //   const payload = { seller_id, ...data };
+        //   try {
+        //     const response = await fetch("http://localhost:8000/products", {
+        //       method: "POST", // Specify the HTTP method
+        //       headers: {
+        //         "Content-Type": "application/json", // Indicate that you're sending JSON data
+        //       },
+        //       body: JSON.stringify(payload), // Convert the data object to a JSON string
+        //     });
+        
+        //     // Check if the response is okay (status in the range 200-299)
+        //     if (!response.ok) {
+        //       throw new Error(`HTTP error! Status: ${response.status}`);
+        //     }
+        
+        //     // Parse the JSON response
+        //     const result = await response.json();
+        //     console.log("Response data:", result);
+        //   } catch (error) {
+        //     console.error("Error during POST request:", error);
+        //   }
+        // };
+
+        const onSubmit = async (data) => {
+          const seller_id = id.id;
+          const formData = new FormData();
+        
+          // Append the other form data
+          formData.append('seller_id', seller_id);
+          Object.keys(data).forEach(key => {
+            if (key === 'image') {
+              // Handle file separately
+              formData.append('images', data[key]); // 'images' is the key expected by your backend
+            } else {
+              formData.append(key, data[key]);
+            }
+          });
+        
           try {
             const response = await fetch("http://localhost:8000/products", {
-              method: "POST", // Specify the HTTP method
-              headers: {
-                "Content-Type": "application/json", // Indicate that you're sending JSON data
-              },
-              body: JSON.stringify(payload), // Convert the data object to a JSON string
+              method: "POST",
+              body: formData, // FormData is directly passed in the body
             });
         
-            // Check if the response is okay (status in the range 200-299)
             if (!response.ok) {
               throw new Error(`HTTP error! Status: ${response.status}`);
             }
         
-            // Parse the JSON response
             const result = await response.json();
             console.log("Response data:", result);
           } catch (error) {
             console.error("Error during POST request:", error);
           }
+        };
+
+
+        const handleFileChange = (e) => {
+          setValue('image', e.target.files[0]);
+          console.log("file", e.target.files[0])
         };
 
   return (
@@ -124,6 +161,16 @@ const AddProducts = (id) => {
           className={`w-full px-3 py-2 border ${errors.stock ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
         />
         {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock.message}</p>}
+      </div>
+      <div className='mb-4'>
+      <label htmlFor="image" className="block text-gray-700 font-bold mb-2">Image</label>
+        <input
+          id="image"
+          type="file"
+          onChange={handleFileChange}
+          className={`w-full px-3 py-2 border ${errors.stock ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        />
+        {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image.message}</p>}
       </div>
 
       <button
